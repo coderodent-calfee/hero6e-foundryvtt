@@ -3,6 +3,189 @@ export class Attack {
         return { ocvMod, XMLID, name };
     }
 
+    static getAutofireAttackTargetsNew(system, targetedTokens, autofireAttackInfo, formData) {
+        const autofire = autofireAttackInfo.autofire;
+        const autofireSkills = autofire.autofireSkills;
+        const targets = [];
+        let totalSkippedMeters = 0;
+        autofire.singleTarget = targetedTokens.length === 1;
+
+        const assignedShots = {};
+        // use the form values for number of shots _unless_ they are switching to/from one target
+        if (formData) {
+            targetedTokens.map((target) => {
+                const shots_on_target_id = `shots_on_target_${target.id}`;
+                const shotsOnTargetInput = formData[shots_on_target_id];
+                if (shotsOnTargetInput) {
+                    const shotValue = (typeof(shotsOnTargetInput) === "number") ? shotsOnTargetInput : parseInt(shotsOnTargetInput.match(/\d+/));
+                    if (!isNaN(shotValue)) {
+                        assignedShots[shots_on_target_id] = shotValue;
+                    }
+                }
+            });
+        }
+
+        for (let i = 0; i < targetedTokens.length; i++) {
+            let shotsOnTarget = autofire.singleTarget
+                ? autofire.autoFireShots
+                : 1;
+            const shots_on_target_id = `shots_on_target_${targetedTokens[i].id}`;
+
+            if (assignedShots[shots_on_target_id]) {
+                shotsOnTarget = assignedShots[shots_on_target_id];
+            }
+            // these are the targeting data used for the attack(s)
+            const targetingData = {
+                autofire,
+                targetId: targetedTokens[i].id,
+                shotsOnTarget,
+                results: [],
+                shots_on_target_id: `shots_on_target_${targetedTokens[i].id}`,
+            };
+            if (i !== 0) {
+                const prevTarget = targetedTokens[i - 1];
+                const target = targetedTokens[i];
+                const skippedMeters = canvas.grid.measureDistance(
+                    prevTarget,
+                    target,
+                    { gridSpaces: true },
+                );
+                totalSkippedMeters += skippedMeters;
+                console.log(
+                    `skip ${skippedMeters} meters between ${prevTarget.name} and ${target.name}`,
+                );
+                targetingData.skippedMeters = skippedMeters;
+                targetingData.skippedShots = autofireSkills.SKIPOVER
+                    ? 0
+                    : Math.floor(skippedMeters / 2 - 1); //todo: check zero
+            } else {
+                targetingData.skippedMeters = 0;
+                targetingData.skippedShots = 0;
+            }
+            targetingData.range = canvas.grid.measureDistance(
+                system.attacker,
+                targetedTokens[i],
+                { gridSpaces: true },
+            );
+            targetingData.ocv = Attack.getRangeModifier(
+                system.item,
+                targetingData.range,
+            );
+            targets.push(targetingData);
+            autofire.totalShotsFired += targetingData.shotsOnTarget;
+            autofire.totalShotsFired += autofireSkills.SKIPOVER
+                ? 0
+                : targetingData.skippedShots;
+            autofire.totalShotsSkipped += targetingData.skippedShots;
+        }
+        autofire.autofireOCV = 0;
+        if (!autofire.singleTarget) {
+            if (autofireSkills.ACCURATE) {
+                autofire.autofireOCV -= 1;
+            } else {
+                autofire.autofireOCV -= totalSkippedMeters / 2;
+            }
+            if (autofireSkills.CONCENTRATED) {
+                autofire.autofireOCV -= 1;
+            }
+            if (autofireSkills.SKIPOVER) {
+                autofire.autofireOCV -= 1;
+            }
+        }
+        return targets;
+    }
+    static getAutofireMaxShots(item) {
+        const autofireMod = item.findModsByXmlid("AUTOFIRE");
+        if (!autofireMod ) {
+            return 0;
+        }
+        // OPTION_ALIAS is a string, ex: "5 Shots"
+        let autoFireShots =
+            parseInt(autofireMod.OPTION_ALIAS.match(/\d+/)) ?? 0;
+        autofireMod?.ADDER?.forEach(adder=> {
+            if(adder.XMLID === "DOUBLE"){
+                let shotsMultiplier =
+                    parseInt(adder.LEVELS.match(/\d+/)) ?? 0;
+                if(shotsMultiplier){
+                    autoFireShots *= Math.pow(2, shotsMultiplier);
+                }
+            }
+        })
+        return autoFireShots;
+    }
+
+    static getAutofireAttackInfoNew(item, targetedTokens, formData) {
+        const autofireMod = item.findModsByXmlid("AUTOFIRE");
+        if (!autofireMod || targetedTokens.length === 0) {
+            return null;
+        }
+        const attacker =
+            item.actor.getActiveTokens()[0] || canvas.tokens.controlled[0];
+        if (!attacker) return; // todo: message?
+
+        const autoFireShots = Attack.getAutofireMaxShots(item);
+
+        const autofireSkills = {};
+        item.actor.items
+            .filter((skill) => "AUTOFIRE_SKILLS" === skill.system.XMLID)
+            .map((skill) => skill.system.OPTION)
+            .forEach((skillOption) => (autofireSkills[skillOption] = true));
+
+        const system = {
+            item,
+            attacker,
+            targetedTokens,
+        }; // system attack info
+
+        const autofire = {
+            autofireMod,
+            autofireSkills,
+            autoFireShots,
+            totalShotsFired: 0,
+            totalShotsSkipped: 0,
+            autofireOCV: 0,
+        }; // autofire attack info
+
+        const autofireAttackInfo = {
+            item,
+            autofire,
+            charges: item.system.charges,
+        };
+
+        // use the form values for number of shots _unless_ they are switching to/from one target
+        const assignedShots = {};
+        if (formData) {
+            targetedTokens.map((target) => {
+                const shots_on_target_id = `shots_on_target_${target.id}`;
+                const shotsOnTargetInput = formData[shots_on_target_id];
+                if (shotsOnTargetInput) {
+                    const shotValue = (typeof(shotsOnTargetInput) === "number") ? shotsOnTargetInput : parseInt(shotsOnTargetInput.match(/\d+/));
+                    if (!isNaN(shotValue)) {
+                        assignedShots[shots_on_target_id] = shotValue;
+                    }
+                }
+            });
+        }
+
+        autofireAttackInfo.targets = Attack.getAutofireAttackTargetsNew(
+            system,
+            targetedTokens,
+            autofireAttackInfo,
+            formData,
+        );
+        autofireAttackInfo.targetIds = {};
+        autofireAttackInfo.targets.forEach((target) => {
+            if(target.target?.id){
+                autofireAttackInfo.targetIds[target.target.id] = target;
+            }
+            else{
+                autofireAttackInfo.targetIds[target.targetId] = target;
+            }
+        });
+        return autofireAttackInfo;
+    }
+    
+    
     static addMultipleAttack(data) {
         if (!data.action?.maneuver?.attackKeys?.length) {
             return false;
@@ -114,6 +297,100 @@ export class Attack {
         return target;
     }
 
+    static getAutofireInfo(item, targetedTokens, options, system, targets) {
+        const autofireMod = item.findModsByXmlid("AUTOFIRE");
+        if (!autofireMod || targetedTokens.length === 0) {
+            return null;
+        }
+        const autoFireShots = Attack.getAutofireMaxShots(item);
+        const singleTarget = targetedTokens.length === 1;
+
+        const autofireSkills = {};
+        item.actor.items
+            .filter((skill) => "AUTOFIRE_SKILLS" === skill.system.XMLID)
+            .map((skill) => skill.system.OPTION)
+            .forEach((skillOption) => (autofireSkills[skillOption] = true));
+
+        const autofire = {
+            autofireMod,                // autofire mod is all text, so it can live here
+            autofireSkills,
+            autoFireShots,
+            totalShotsFired : 0,
+            totalShotsSkipped : 0,
+            totalSkippedMeters : 0,
+            autofireOCV: 0,
+            singleTarget
+        }; // autofire attack info
+
+        // assigned shots on target
+        const assignedShots = {};
+        if(options){
+            // preserve input data
+            targetedTokens.map((target) => {
+                const shots_on_target_id = `shots_on_target_${target.id}`;
+                const shotsOnTargetInput = options[shots_on_target_id];
+                if (shotsOnTargetInput) {
+                    const shotValue = (typeof(shotsOnTargetInput) === "number") ? shotsOnTargetInput : parseInt(shotsOnTargetInput.match(/\d+/));
+                    if (!isNaN(shotValue)) {
+                        assignedShots[shots_on_target_id] = shotValue;
+                    }
+                }
+            });
+        }
+        for(let i =0; i< targets.length; i++){
+            const target = targets[i];
+            const targetId = target.targetId;
+            let shotsOnTarget = autofire.singleTarget ? autofire.autoFireShots : 1;
+            const shots_on_target_id = `shots_on_target_${targetId}`;
+            if (assignedShots[shots_on_target_id]) {
+                shotsOnTarget = assignedShots[shots_on_target_id];
+            }
+            target.autofire = autofire;
+            target.shotsOnTarget = shotsOnTarget;
+            target.shots_on_target_id = `shots_on_target_${targetId}`;
+            autofire.totalShotsFired += target.shotsOnTarget;
+        }
+        // figure skipped distances
+        for(let i = 0; i< targets.length; i++) {
+            const target = targets[i];
+            const targetId = target.targetId;
+            if (i === 0) {
+                target.skippedMeters = 0;
+                target.skippedShots = 0;
+            } else {
+                const prevTarget = system.token[targets[i - 1].targetId];
+                const targetToken = system.token[targetId];
+                const skippedMeters = canvas.grid.measureDistance(
+                    prevTarget,
+                    targetToken,
+                    { gridSpaces: true }
+                );
+                console.log(
+                    `skip ${skippedMeters} meters between ${prevTarget.name} and ${targetToken.name}`
+                );
+                target.skippedMeters = skippedMeters;
+                target.skippedShots = autofireSkills.SKIPOVER ? 0 : Math.floor(skippedMeters / 2 - 1); //todo: check zero
+                autofire.totalShotsFired += autofireSkills.SKIPOVER ? 0 : target.skippedShots;
+                autofire.totalShotsSkipped += target.skippedShots;
+                autofire.totalSkippedMeters += skippedMeters;
+            }
+        }
+        if (!singleTarget) {
+            if (autofireSkills.ACCURATE) {
+                autofire.autofireOCV -= 1;
+            } else {
+                autofire.autofireOCV -= autofire.totalSkippedMeters / 2;
+            }
+            if (autofireSkills.CONCENTRATED) {
+                autofire.autofireOCV -= 1;
+            }
+            if (autofireSkills.SKIPOVER) {
+                autofire.autofireOCV -= 1;
+            }
+        }        
+        return autofire;
+    }    
+    
     static getAttackInfo(item, targetedTokens, options, system) {
         const targets = [];
         for (let i = 0; i < targetedTokens.length; i++) {
@@ -125,7 +402,12 @@ export class Attack {
             targets,
             ocvModifiers: {},
         };
-        return attack;
+        const autofire = Attack.getAutofireInfo(item, targetedTokens, options, system, targets);
+        if(autofire){
+            attack.autofire = autofire;
+        }
+        
+        return [attack];
     }
 
     static getHaymakerAttackInfo(item, targetedTokens, options, system) {
