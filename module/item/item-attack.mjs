@@ -285,7 +285,9 @@ export async function AttackToHit(item, options) {
 
     const action = Attack.getActionInfo(item, Array.from(game.user.targets), options);
     console.log("RWC AttackToHit action:", action);
-
+    item = action.system.item[action.current.itemId];
+    const targets = action.system.currentTargets;
+    
     const actor = item.actor;
     let effectiveItem = item;
 
@@ -351,7 +353,7 @@ export async function AttackToHit(item, options) {
     // There are no range penalties if this is a line of sight power or it has been bought with
     // no range modifiers.
     if (
-        game.user.targets.size > 0 &&
+        targets.size > 0 &&
         !(
             item.system.range === CONFIG.HERO.RANGE_TYPES.LINE_OF_SIGHT ||
             item.system.range === CONFIG.HERO.RANGE_TYPES.SPECIAL ||
@@ -366,7 +368,7 @@ export async function AttackToHit(item, options) {
             ui.notifications.warn(`${actor.name} has no token in this scene.  Range penalties will be ignored.`);
         }
 
-        const target = game.user.targets.first();
+        const target = targets.first();
         const distance = token
             ? canvas.grid.measureDistance(token, target, {
                   gridSpaces: true,
@@ -657,7 +659,7 @@ export async function AttackToHit(item, options) {
 
     let targetData = [];
     const targetIds = [];
-    let targetsArray = Array.from(game.user.targets);
+    let targetsArray = Array.from(targets);
 
     if (targetsArray.length === 0 && item?.system.XMLID === "MINDSCAN") {
         targetsArray = canvas.tokens.controlled;
@@ -781,7 +783,7 @@ export async function AttackToHit(item, options) {
     if (autofire) {
         // Autofire check for multiple hits on single target
         if (targetData.length === 1) {
-            const singleTarget = Array.from(game.user.targets)[0];
+            const singleTarget = Array.from(targets)[0];
             const toHitRollTotal = targetData[0].toHitRollTotal;
             const firstShotResult = targetData[0].result.hit;
             const autoSuccess = targetData[0].autoSuccess;
