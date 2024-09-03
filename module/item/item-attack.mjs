@@ -283,7 +283,6 @@ export async function AttackToHit(item, options) {
     }
 
     const action = Attack.getActionInfo(item, Array.from(game.user.targets), options);
-    console.log("RWC AttackToHit action:", action);
     item = action.system.item[action.current.itemId];
     const targets = action.system.currentTargets;
 
@@ -908,9 +907,7 @@ export async function AttackToHit(item, options) {
             ?.label.match(/[\d,]+/)?.[0],
         action,
     };
-    console.log("RWC store rolled result in options");
     options.rolledResult = targetData;
-    console.log("RWC store rolled result in options:", options.rolledResult);
     action.system = {}; // clear out any system information that would interfere with parsing
     cardData.actionData = JSON.stringify(action);
 
@@ -1073,7 +1070,6 @@ function getAttackTags(item) {
 }
 
 export async function _onRollAoeDamage(event) {
-    //console.log("_onRollAoeDamage");
     const button = event.currentTarget;
     button.blur(); // The button remains highlighted for some reason; kluge to fix.
     const options = { ...button.dataset };

@@ -8,10 +8,7 @@ export class Attack {
         target.ocvModifiers.push(ocvModifier);
         target.ocvModIds ??= {};
         target.ocvModIds[ocvModifier.XMLID] = ocvModifier;
-        target.totalOcvMod = target.ocvModifiers.reduce(
-            (accumulator, currentValue) => accumulator + currentValue.ocvMod,
-            0,
-        );
+        target.totalOcvMod = target.ocvModifiers.reduce((accumulator, currentValue) => accumulator + currentValue.ocvMod, 0);
     }
 
     // static getAutofireAttackTargetsNew(system, targetedTokens, autofireAttackInfo, formData) {
