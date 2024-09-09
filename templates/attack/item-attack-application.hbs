@@ -68,15 +68,7 @@
     {{!-- END multiple-attack-section --}}
     {{!-- BEGIN standard-attack-section --}}
     <div class="standard-attack-section" {{#if (or action.current.isMultipleAttack action.current.isHaymakerAttack) }}style="display: none;"{{/if}} >
-
-      {{#each action.current.ocvModifiers as |ocvModifier|}}
-          <div>
-            <label>{{ocvModifier.name}} OCV:</label>
-            <label>{{ocvModifier.ocvMod}}</label>
-          </div>
-      {{/each}}
-
-
+      
       {{!-- Aim (hit location) form group --}}
       <div class="form-group" {{#unless useHitLoc}}style="display: none;"{{/unless}}>
         <label>Aim</label>
@@ -87,7 +79,6 @@
           {{/each}}
         </select>
       </div>
-
       {{!-- Aim side (hit location side) form group --}}
       <div class="form-group" {{#unless hitLocSide}}style="display: none;"{{/unless}}>
         <label>Aim Side</label>
@@ -98,6 +89,23 @@
           {{/each}}
         </select>
       </div>
+      
+      {{#each action.current.ocvModifiers as |ocvModifier|}}
+          <div>
+            <label>{{ocvModifier.name}} OCV:</label>
+            <label>{{ocvModifier.ocvMod}}</label>
+          </div>
+      {{/each}}
+      {{#each action.current.attacks as |attack|}}
+        {{#each attack.ocvModifiers as |ocvModifier|}}
+          <div>
+            <label>{{ocvModifier.name}} OCV:</label>
+            <label>{{ocvModifier.ocvMod}}</label>
+          </div>
+        {{/each}}
+      {{/each}}
+
+
 
       {{!-- Penalty skill levels --}}
       <div class="description" {{#unless PENALTY_SKILL_LEVELS}}style="display: none;"{{/unless}}>
@@ -128,7 +136,7 @@
               <div class="target-info-row">
                 <div class="ellipsis-text target-name" target_id="{{target.targetId}}">{{lookup (lookup @root/action.system.token target.targetId) "name" }}</div>
                 <div>{{target.range}}m</div>
-                <div>{{math "+" target.totalOcvMod target.autofire.totalOcvMod}}</div>
+                <div>{{target.totalOcvMod}}</div>
                 <div>{{target.skippedShots}}</div>
                 {{!-- we need input if this is autofire on one target, or if they have Concentrated Sprayfire --}}
                 {{#if
@@ -141,7 +149,19 @@
               </div>
             {{/each}}
           </div>
-        {{/if}}
+          <div>
+            {{#unless (eq 1 attack.targets.length)}}
+              {{math "-" attack.autofire.totalShotsFired attack.autofire.totalShotsSkipped}} Shots on Targets
+              and {{attack.autofire.totalShotsSkipped}}
+              Skipped is{{/unless}}
+              {{attack.autofire.totalShotsFired}} Total Shots to be Fired
+          </div>
+          {{#if attack.charges}}
+            <div>Charged to be Used: {{attack.autofire.totalShotsFired}} of {{attack.charges.value}} left</div>
+          {{else}}
+            <div>Endurance to be Used: TBD of TBD left</div>
+          {{/if}}
+        {{/if}}       {{!-- end autofire --}}
       {{/each}}      
       
       {{#if mindScanChoices}}

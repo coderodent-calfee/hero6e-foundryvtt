@@ -1315,7 +1315,7 @@ export async function _onRollDamage(event) {
         return ui.notifications.error(`Attack details are no longer available.`);
     }
 
-    const action = JSON.parse(toHitData.actiondata);
+    const action = JSON.parse(toHitData.actionData);
 
     let effectiveItem = item;
 
