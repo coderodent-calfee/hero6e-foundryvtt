@@ -1007,13 +1007,13 @@ function getAttackTags(item) {
     for (const mod of item.system.MODIFIER || []) {
         switch (mod.XMLID) {
             case "AUTOFIRE":
-                {
-                    const autoFireShots = parseInt(mod.OPTION_ALIAS.match(/\d+/));
-                    attackTags.push({
-                        name: `${mod.ALIAS || mod.XMLID}(${autoFireShots})`,
-                        title: `${mod.OPTION_ALIAS || ""}`,
-                    });
-                }
+            {
+                const autoFireShots = parseInt(mod.OPTION_ALIAS.match(/\d+/));
+                attackTags.push({
+                    name: `${mod.ALIAS || mod.XMLID}(${autoFireShots})`,
+                    title: `${mod.OPTION_ALIAS || ""}`,
+                });
+            }
                 break;
 
             case "EXPLOSION":
@@ -1111,16 +1111,16 @@ export async function _onRollKnockback(event) {
     <form autocomplete="off">
         <p>
             A character takes 1d6 damage for every ${getRoundedDownDistanceInSystemUnits(
-                2,
-                item.actor,
-            )}${getSystemDisplayUnits(item.actor.system.is5e)} they are knocked into a solid object, 
+        2,
+        item.actor,
+    )}${getSystemDisplayUnits(item.actor.system.is5e)} they are knocked into a solid object, 
             to a maximum of the PD + BODY of the object hit.
         </p>
         <p>
             A character takes 1d6 damage for every ${getRoundedDownDistanceInSystemUnits(
-                4,
-                item.actor,
-            )}${getSystemDisplayUnits(item.actor.system.is5e)} they are knocked back if no object intervenes.
+        4,
+        item.actor,
+    )}${getSystemDisplayUnits(item.actor.system.is5e)} they are knocked back if no object intervenes.
         </p>
         <p>
             The character typically winds up prone.
@@ -1130,8 +1130,8 @@ export async function _onRollKnockback(event) {
             <div class="form-group">
                 <label>KB damage dice</label>
                 <input type="text" name="knockbackDice" value="${Math.floor(
-                    knockbackResultTotal / 2,
-                )}" data-dtype="Number" />
+        knockbackResultTotal / 2,
+    )}" data-dtype="Number" />
             </div>
         </p>
 
@@ -1388,7 +1388,7 @@ export async function _onRollDamage(event) {
         .modifyToStandardEffect(useStandardEffect)
         .modifyToNoBody(
             item.system.stunBodyDamage === CONFIG.HERO.stunBodyDamages.stunonly ||
-                item.system.stunBodyDamage === CONFIG.HERO.stunBodyDamages.effectonly,
+            item.system.stunBodyDamage === CONFIG.HERO.stunBodyDamages.effectonly,
         )
         .addToHitLocation(
             includeHitLocation,
