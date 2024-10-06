@@ -199,7 +199,7 @@ export class Attack {
     }
 
     static makeOcvModifier(ocvMod, XMLID, name) {
-        return { ocvMod : ocvMod < 0 ? Math.ceil(ocvMod) : Math.floor(ocvMod), XMLID, name };
+        return { ocvMod: ocvMod < 0 ? Math.ceil(ocvMod) : Math.floor(ocvMod), XMLID, name };
     }
 
     static addOcvModifier(target, ocvModifier) {
@@ -636,12 +636,14 @@ export class Attack {
             itemId: item?.id,
             targets,
             cvModifiers: [],
-            charges: item.system.charges
+            charges: item.system.charges,
         };
         const autofire = Attack.getAutofireInfo(item, targetedTokens, options, system, targets);
         if (autofire) {
             attack.autofire = autofire;
-            autofire.ocvModifiers?.forEach((ocvMod)=>{Attack.addOcvModifier(attack, ocvMod);});
+            autofire.ocvModifiers?.forEach((ocvMod) => {
+                Attack.addOcvModifier(attack, ocvMod);
+            });
         }
 
         return attack;

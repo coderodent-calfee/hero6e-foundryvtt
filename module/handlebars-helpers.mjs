@@ -43,7 +43,7 @@ function math(...theArguments) {
     const operator = theArguments[0];
     let initialValue = 0;
     for (const [index, arg] of theArguments.entries()) {
-        if( index === 0){
+        if (index === 0) {
             continue;
         }
         if (typeof arg !== "number") {
@@ -51,10 +51,9 @@ function math(...theArguments) {
             break;
         }
         // [1] is an initial value
-        if( index === 1){
+        if (index === 1) {
             initialValue = arg;
-        }
-        else if (index > 1) {
+        } else if (index > 1) {
             params.push(arg);
         }
     }
