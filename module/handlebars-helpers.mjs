@@ -10,6 +10,7 @@ export function initializeHandlebarsHelpers() {
         return value !== undefined;
     });
     Handlebars.registerHelper("includes", includes);
+    Handlebars.registerHelper("math", math);
 }
 
 function indexOf(str, searchTerm) {
@@ -34,4 +35,25 @@ function getModulePath(templateDirectory) {
 
 function includes(str, searchTerm) {
     return str?.includes(searchTerm);
+}
+
+function math(...theArguments) {
+    const params = [];
+    const operator = theArguments[0];
+    for (const [index, arg] of theArguments.entries()) {
+        if (index > 0) {
+            if (typeof arg !== "number") {
+                break;
+            }
+            params.push(arg);
+        }
+    }
+    switch (operator) {
+        case "+":
+            return params.reduce((accumulator, currentValue) => {
+                return accumulator + currentValue;
+            }, 0);
+        default:
+            return `Operator ${operator} Not Implemented`;
+    }
 }

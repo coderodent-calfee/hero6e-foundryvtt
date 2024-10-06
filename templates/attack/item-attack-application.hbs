@@ -152,6 +152,39 @@
         <input class="item-toggle" name="usePsl" type="checkbox" {{checked usePsl}} data-dtype="Boolean" />
       </div>
 
+      {{!-- attack specific form --}}
+      {{#each @root/action.current.attacks as |attack index|}}
+        {{!-- autofire form --}}
+        {{#if attack.autofire}}
+          <div class="attack-options target-container">
+            <div class="target-info-header">
+              {{!-- could probably do this as an #each and pass it in if there are variations --}}
+              <div>Target</div>
+              <div>Range</div>
+              <div>OCV</div>
+              <div>Skip</div>
+              <div>Shots</div>
+            </div>
+            {{#each attack.targets as |target|}}
+              <div class="target-info-row">
+                <div class="ellipsis-text target-name" target_id="{{target.targetId}}">{{lookup (lookup @root/action.system.token target.targetId) "name" }}</div>
+                <div>{{target.range}}m</div>
+                <div>{{math "+" target.totalOcvMod target.autofire.totalOcvMod}}</div>
+                <div>{{target.skippedShots}}</div>
+                {{!-- we need input if this is autofire on one target, or if they have Concentrated Sprayfire --}}
+                {{#if
+                  (or target.autofire.singleTarget target.autofire.autofireSkills.CONCENTRATED) }}
+                  <div><input type="text" name="{{target.shots_on_target_id}}"
+                              value={{target.shotsOnTarget}} /></div>
+                {{else}}
+                  <div>{{target.shotsOnTarget}}</div>
+                {{/if}}
+              </div>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{/each}}      
+      
       {{#if mindScanChoices}}
         <div class="form-group">
           <label>{{localize "Items.Attack.OmcvMod"}}</label>
