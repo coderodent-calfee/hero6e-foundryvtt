@@ -199,7 +199,7 @@ export class Attack {
     }
 
     static makeOcvModifier(ocvMod, XMLID, name) {
-        return { ocvMod: Math.floor(ocvMod), XMLID, name };
+        return { ocvMod : ocvMod < 0 ? Math.ceil(ocvMod) : Math.floor(ocvMod), XMLID, name };
     }
 
     static addOcvModifier(target, ocvModifier) {
@@ -584,13 +584,14 @@ export class Attack {
             targets[i].autofire = autofire;
         }
 
+        const skipped = Attack.getAutofireSkippedShots(item, targetedTokens, options, system, targets);
+        autofire.totalShotsSkipped = skipped.shots;
+        autofire.totalSkippedMeters = skipped.meters;
+
         autofire.totalShotsFired = targets.reduce(
             (accumulator, target) => accumulator + (autofireSkills.SKIPOVER ? 0 : target.skippedShots),
             Attack.getAutofireAssignedShots(item, targetedTokens, options, system, targets),
         );
-        const skipped = Attack.getAutofireSkippedShots(item, targetedTokens, options, system, targets);
-        autofire.totalShotsSkipped = skipped.shots;
-        autofire.totalSkippedMeters = skipped.meters;
 
         // perhaps roll these onto the target? easier to assemble in the display?
         if (!singleTarget) {
@@ -635,10 +636,12 @@ export class Attack {
             itemId: item?.id,
             targets,
             cvModifiers: [],
+            charges: item.system.charges
         };
         const autofire = Attack.getAutofireInfo(item, targetedTokens, options, system, targets);
         if (autofire) {
             attack.autofire = autofire;
+            autofire.ocvModifiers?.forEach((ocvMod)=>{Attack.addOcvModifier(attack, ocvMod);});
         }
 
         return attack;

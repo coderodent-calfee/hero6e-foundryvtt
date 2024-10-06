@@ -143,6 +143,7 @@ Hooks.once("init", async function () {
         `systems/${HEROSYS.module}/templates/actor/actor-sheet.hbs`,
         `systems/${HEROSYS.module}/templates/sidebar/partials/document-partial.hbs`,
         `systems/${HEROSYS.module}/templates/system/effects-panel.hbs`,
+        `systems/${HEROSYS.module}/templates/chat/item-toHit-chat-partial.hbs`,
     ];
     // Handlebars Templates and Partials
     loadTemplates(templatePaths);

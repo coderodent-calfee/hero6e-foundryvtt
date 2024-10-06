@@ -39,12 +39,22 @@ function includes(str, searchTerm) {
 
 function math(...theArguments) {
     const params = [];
+    // [0] is the operator
     const operator = theArguments[0];
+    let initialValue = 0;
     for (const [index, arg] of theArguments.entries()) {
-        if (index > 0) {
-            if (typeof arg !== "number") {
-                break;
-            }
+        if( index === 0){
+            continue;
+        }
+        if (typeof arg !== "number") {
+            // todo: maybe parse a string?
+            break;
+        }
+        // [1] is an initial value
+        if( index === 1){
+            initialValue = arg;
+        }
+        else if (index > 1) {
             params.push(arg);
         }
     }
@@ -52,7 +62,12 @@ function math(...theArguments) {
         case "+":
             return params.reduce((accumulator, currentValue) => {
                 return accumulator + currentValue;
-            }, 0);
+            }, initialValue);
+        case "-":
+            return params.reduce((accumulator, currentValue) => {
+                return accumulator - currentValue;
+            }, initialValue);
+
         default:
             return `Operator ${operator} Not Implemented`;
     }
