@@ -127,6 +127,38 @@ Our support ratings:
 | UNIVERSAL TRANSLATOR | D | |
 | WEAPONMASTER | B | |
 
+## Maneuvers
+
+| Maneuver Name     | Support | Comments |
+|:------------------| :---:  | :--- |
+| BLAZINGAWAY",     | D | Maneuver |
+| BRACE",           | D | Maneuver |
+| CHOKE",           | D | Maneuver |
+| CLUBWEAPON",      | D | Maneuver |
+| COVER",           | D | Maneuver |
+| DISARM",          | D | Maneuver |
+| DIVEFORCOVER",    | D | Maneuver |
+| DODGE",           | D | Maneuver |
+| GRAB",            | D | Maneuver |
+| GRABBY",          | D | Maneuver |
+| HAYMAKER",        | D | Maneuver |
+| HURRY",           | D | Maneuver |
+| MOVEBY",          | D | Maneuver |
+| MOVETHROUGH",     | D | Maneuver |
+| MULTIPLEATTACK",  | D | Maneuver |
+| OTHERATTACKS",    | D | Maneuver |
+| PULLINGAPUNCH",   | D | Maneuver |
+| RAPIDFIRE",       | D | Maneuver |
+| SET",             | D | Maneuver |
+| SETANDBRACE",     | D | Maneuver |
+| SHOVE",           | D | Maneuver |
+| SNAPSHOT",        | D | Maneuver |
+| STRAFE",          | D | Maneuver |
+| STRIKE",          | D | Maneuver |
+| SUPPRESSIONFIRE", | D | Maneuver |
+| SWEEP",           | D | Maneuver |
+| THROW",           | D | Maneuver |
+| TRIP",            | D | Maneuver |
 ## Powers
 
 | POWER NAME | Support | Comments |

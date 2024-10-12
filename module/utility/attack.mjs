@@ -186,7 +186,23 @@ export class Attack {
         return Attack.makeCvModifier(cvMod, item.system.XMLID, item.name, item.id);
     }
 
-    static makeCvModifier(cvMod, XMLID, name, id) {
+    static makeOcvModifier(ocvMod, XMLID, name, id) {
+        return Attack.makeCvModifier({ocv:ocvMod}, XMLID, name, id);
+    }
+    
+    // cvMod is a structure: { ocv, dcv, dc, dcvMultiplier, ocvMultiplier }
+    static makeCvModifier(cvModParam, XMLID, name, id) {
+        const cvMod = { dcvMultiplier: 1};
+        if(cvModParam.ocv){
+            cvMod.ocv = cvModParam.ocv < 0 ? Math.ceil(cvModParam.ocv) : Math.floor(cvModParam.ocv);
+        }
+        if(cvModParam.dcv){
+            cvMod.dcv = cvModParam.dcv < 0 ? Math.ceil(cvModParam.dcv) : Math.floor(cvModParam.dcv);
+        }
+        if(cvModParam.dcvMultiplier || cvModParam.dcvMultiplier === 0){
+            cvMod.dcvMultiplier = cvModParam.dcvMultiplier;
+        }
+        
         return { cvMod, XMLID, name, id };
     }
 
@@ -198,183 +214,6 @@ export class Attack {
         return strike?.id;
     }
 
-    static makeOcvModifier(ocvMod, XMLID, name) {
-        return { ocvMod: ocvMod < 0 ? Math.ceil(ocvMod) : Math.floor(ocvMod), XMLID, name };
-    }
-
-    static addOcvModifier(target, ocvModifier) {
-        target.ocvModifiers ??= [];
-        target.ocvModifiers.push(ocvModifier);
-        target.ocvModIds ??= {};
-        target.ocvModIds[ocvModifier.XMLID] = ocvModifier;
-        target.totalOcvMod = target.ocvModifiers.reduce(
-            (accumulator, currentValue) => accumulator + currentValue.ocvMod,
-            0,
-        );
-    }
-
-    // static getAutofireAttackTargetsNew(system, targetedTokens, autofireAttackInfo, formData) {
-    //     const autofire = autofireAttackInfo.autofire;
-    //     const autofireSkills = autofire.autofireSkills;
-    //     const targets = [];
-    //     let totalSkippedMeters = 0;
-    //     autofire.singleTarget = targetedTokens.length === 1;
-    //
-    //     const assignedShots = {};
-    //     // use the form values for number of shots _unless_ they are switching to/from one target
-    //     if (formData) {
-    //         targetedTokens.map((target) => {
-    //             const shots_on_target_id = `shots_on_target_${target.id}`;
-    //             const shotsOnTargetInput = formData[shots_on_target_id];
-    //             if (shotsOnTargetInput) {
-    //                 const shotValue = (typeof(shotsOnTargetInput) === "number") ? shotsOnTargetInput : parseInt(shotsOnTargetInput.match(/\d+/));
-    //                 if (!isNaN(shotValue)) {
-    //                     assignedShots[shots_on_target_id] = shotValue;
-    //                 }
-    //             }
-    //         });
-    //     }
-    //
-    //     for (let i = 0; i < targetedTokens.length; i++) {
-    //         let shotsOnTarget = autofire.singleTarget
-    //             ? autofire.autoFireShots
-    //             : 1;
-    //         const shots_on_target_id = `shots_on_target_${targetedTokens[i].id}`;
-    //
-    //         if (assignedShots[shots_on_target_id]) {
-    //             shotsOnTarget = assignedShots[shots_on_target_id];
-    //         }
-    //         // these are the targeting data used for the attack(s)
-    //         const targetingData = {
-    //             autofire,
-    //             targetId: targetedTokens[i].id,
-    //             shotsOnTarget,
-    //             results: [],
-    //             shots_on_target_id: `shots_on_target_${targetedTokens[i].id}`,
-    //         };
-    //         if (i !== 0) {
-    //             const prevTarget = targetedTokens[i - 1];
-    //             const target = targetedTokens[i];
-    //             const skippedMeters = canvas.grid.measureDistance(
-    //                 prevTarget,
-    //                 target,
-    //                 { gridSpaces: true },
-    //             );
-    //             totalSkippedMeters += skippedMeters;
-    //             console.log(
-    //                 `skip ${skippedMeters} meters between ${prevTarget.name} and ${target.name}`,
-    //             );
-    //             targetingData.skippedMeters = skippedMeters;
-    //             targetingData.skippedShots = autofireSkills.SKIPOVER
-    //                 ? 0
-    //                 : Math.floor(skippedMeters / 2 - 1); //todo: check zero
-    //         } else {
-    //             targetingData.skippedMeters = 0;
-    //             targetingData.skippedShots = 0;
-    //         }
-    //         targetingData.range = canvas.grid.measureDistance(
-    //             system.attacker,
-    //             targetedTokens[i],
-    //             { gridSpaces: true },
-    //         );
-    //         targetingData.ocv = Attack.getRangeModifier(
-    //             system.item,
-    //             targetingData.range,
-    //         );
-    //         targets.push(targetingData);
-    //         autofire.totalShotsFired += targetingData.shotsOnTarget;
-    //         autofire.totalShotsFired += autofireSkills.SKIPOVER
-    //             ? 0
-    //             : targetingData.skippedShots;
-    //         autofire.totalShotsSkipped += targetingData.skippedShots;
-    //     }
-    //     autofire.autofireOCV = 0;
-    //     if (!autofire.singleTarget) {
-    //         if (autofireSkills.ACCURATE) {
-    //             autofire.autofireOCV -= 1;
-    //         } else {
-    //             autofire.autofireOCV -= totalSkippedMeters / 2;
-    //         }
-    //         if (autofireSkills.CONCENTRATED) {
-    //             autofire.autofireOCV -= 1;
-    //         }
-    //         if (autofireSkills.SKIPOVER) {
-    //             autofire.autofireOCV -= 1;
-    //         }
-    //     }
-    //     return targets;
-    // }
-
-    // static getAutofireAttackInfoNew(item, targetedTokens, formData) {
-    //     const autofireMod = item.findModsByXmlid("AUTOFIRE");
-    //     if (!autofireMod || targetedTokens.length === 0) {
-    //         return null;
-    //     }
-    //     const attacker =
-    //         item.actor.getActiveTokens()[0] || canvas.tokens.controlled[0];
-    //     if (!attacker) return; // todo: message?
-    //
-    //     const autoFireShots = Attack.getAutofireMaxShots(item);
-    //
-    //     const autofireSkills = {};
-    //     item.actor.items
-    //         .filter((skill) => "AUTOFIRE_SKILLS" === skill.system.XMLID)
-    //         .map((skill) => skill.system.OPTION)
-    //         .forEach((skillOption) => (autofireSkills[skillOption] = true));
-    //
-    //     const system = {
-    //         item,
-    //         attacker,
-    //         targetedTokens,
-    //     }; // system attack info
-    //
-    //     const autofire = {
-    //         autofireMod,
-    //         autofireSkills,
-    //         autoFireShots,
-    //         totalShotsFired: 0,
-    //         totalShotsSkipped: 0,
-    //         autofireOCV: 0,
-    //     }; // autofire attack info
-    //
-    //     const autofireAttackInfo = {
-    //         item,
-    //         autofire,
-    //         charges: item.system.charges,
-    //     };
-    //
-    //     // use the form values for number of shots _unless_ they are switching to/from one target
-    //     const assignedShots = {};
-    //     if (formData) {
-    //         targetedTokens.map((target) => {
-    //             const shots_on_target_id = `shots_on_target_${target.id}`;
-    //             const shotsOnTargetInput = formData[shots_on_target_id];
-    //             if (shotsOnTargetInput) {
-    //                 const shotValue = (typeof(shotsOnTargetInput) === "number") ? shotsOnTargetInput : parseInt(shotsOnTargetInput.match(/\d+/));
-    //                 if (!isNaN(shotValue)) {
-    //                     assignedShots[shots_on_target_id] = shotValue;
-    //                 }
-    //             }
-    //         });
-    //     }
-    //
-    //     autofireAttackInfo.targets = Attack.getAutofireAttackTargetsNew(
-    //         system,
-    //         targetedTokens,
-    //         autofireAttackInfo,
-    //         formData,
-    //     );
-    //     autofireAttackInfo.targetIds = {};
-    //     autofireAttackInfo.targets.forEach((target) => {
-    //         if(target.target?.id){
-    //             autofireAttackInfo.targetIds[target.target.id] = target;
-    //         }
-    //         else{
-    //             autofireAttackInfo.targetIds[target.targetId] = target;
-    //         }
-    //     });
-    //     return autofireAttackInfo;
-    // }
 
     static addMultipleAttack(data) {
         if (!data.action?.maneuver?.attackKeys?.length) {
@@ -477,10 +316,7 @@ export class Attack {
             results: [], // todo: for attacks that roll one effect and apply to multiple targets do something different here
         };
         target.range = calculateDistanceBetween(system.attackerToken, targetedToken);
-        Attack.addOcvModifier(
-            target,
-            Attack.makeOcvModifier(Attack.getRangeModifier(item, target.range), "RANGE", "Range"),
-        );
+        target.cvModifiers.push(Attack.makeOcvModifier(Attack.getRangeModifier(item, target.range), "RANGE", "Range"));
         return target;
     }
 
@@ -571,13 +407,17 @@ export class Attack {
         const autofireSkills = {};
         item.actor.items
             .filter((skill) => "AUTOFIRE_SKILLS" === skill.system.XMLID)
-            .forEach((skill) => (autofireSkills[skill.system.OPTION] = skill.system));
+            .forEach((skill) => {
+                system.item[skill.id] = skill;
+                return (autofireSkills[skill.system.OPTION] = skill.system);
+            });
 
         const autofire = {
             autofireMod, // autofire mod is all text, so it can live here
             autofireSkills,
             autoFireShots,
             singleTarget,
+            cvModifiers: [],
         }; // autofire attack info
 
         for (let i = 0; i < targets.length; i++) {
@@ -596,31 +436,19 @@ export class Attack {
         // perhaps roll these onto the target? easier to assemble in the display?
         if (!singleTarget) {
             if (autofireSkills.ACCURATE) {
-                Attack.addOcvModifier(
-                    autofire,
-                    Attack.makeOcvModifier(-1, autofireSkills.ACCURATE.XMLID, autofireSkills.ACCURATE.OPTION_ALIAS),
-                );
+                autofire.cvModifiers.push(Attack.makeOcvModifier(-1, autofireSkills.ACCURATE.XMLID, autofireSkills.ACCURATE.OPTION_ALIAS));
             } else {
-                Attack.addOcvModifier(
-                    autofire,
-                    Attack.makeOcvModifier(autofire.totalSkippedMeters / -2, autofireMod.XMLID, autofireMod.ALIAS),
-                );
+                autofire.cvModifiers.push(Attack.makeOcvModifier(autofire.totalSkippedMeters / -2, autofireMod.XMLID, autofireMod.ALIAS));
             }
             if (autofireSkills.CONCENTRATED) {
-                Attack.addOcvModifier(
-                    autofire,
-                    Attack.makeOcvModifier(
+                autofire.cvModifiers.push(Attack.makeOcvModifier(
                         -1,
                         autofireSkills.CONCENTRATED.XMLID,
                         autofireSkills.CONCENTRATED.OPTION_ALIAS,
-                    ),
-                );
+                    ));
             }
             if (autofireSkills.SKIPOVER) {
-                Attack.addOcvModifier(
-                    autofire,
-                    Attack.makeOcvModifier(-1, autofireSkills.SKIPOVER.XMLID, autofireSkills.SKIPOVER.OPTION_ALIAS),
-                );
+                autofire.cvModifiers.push(Attack.makeOcvModifier(-1, autofireSkills.SKIPOVER.XMLID, autofireSkills.SKIPOVER.OPTION_ALIAS));
             }
         }
         return autofire;
@@ -641,9 +469,7 @@ export class Attack {
         const autofire = Attack.getAutofireInfo(item, targetedTokens, options, system, targets);
         if (autofire) {
             attack.autofire = autofire;
-            autofire.ocvModifiers?.forEach((ocvMod) => {
-                Attack.addOcvModifier(attack, ocvMod);
-            });
+            attack.cvModifiers = attack.cvModifiers.concat(autofire.cvModifiers);
         }
 
         return attack;
@@ -655,7 +481,6 @@ export class Attack {
     }
 
     static getMultipleAttackManeuverInfo(item, targetedTokens, options, system) {
-        // TODO: need to adjust DCV
         const maneuver = {
             attackerTokenId: system.attackerToken?.id ?? null,
             isMultipleAttack: true,
@@ -777,7 +602,7 @@ export class Attack {
             // current.attacks.forEach((attack)=>{ attack.targets.forEach((target)=>{
             //     current.ocvModifiers = [].concat(current.ocvModifiers, target.ocvModifiers );
             // }); });
-            Attack.addOcvModifier(current, Attack.makeOcvModifier(maneuver.ocvMod, xmlid, multipleAttackItem.name));
+            current.cvModifiers.push(maneuver.cvMod);
             return current;
         }
         return maneuver;

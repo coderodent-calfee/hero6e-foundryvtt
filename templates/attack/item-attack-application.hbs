@@ -69,15 +69,8 @@
       <div {{#unless (ne 1 action.current.cvMod.cvMod.dcvMultiplier) }}style="display: none;"{{/unless}}>
         <label>{{action.current.cvMod.name}}</label>
         <label>{{localize "Items.Attack.DcvMod"}}</label>
-        {{!-- TODO: fix this when I have math --}}        
-        {{#if
-          (and
-            (gt action.current.cvMod.cvMod.dcvMultiplier 0)
-            (lt action.current.cvMod.cvMod.dcvMultiplier 1)
-            0
-          )
-        }}
-          <label>x1/{{math 1 action.current.cvMod.cvMod.dcvMultiplier}}</label>
+        {{#if (and (gt action.current.cvMod.cvMod.dcvMultiplier 0)(lt action.current.cvMod.cvMod.dcvMultiplier 1))}}
+          <label>x1/{{math "/" 1 action.current.cvMod.cvMod.dcvMultiplier}}</label>
         {{else}}
           <label>x{{action.current.cvMod.cvMod.dcvMultiplier}}</label>
         {{/if}}
@@ -87,37 +80,6 @@
     {{!-- END multiple-attack-section --}}
     {{!-- BEGIN standard-attack-section --}}
     <div class="standard-attack-section" {{#if (or action.current.isMultipleAttack action.current.isHaymakerAttack) }}style="display: none;"{{/if}} >
-
-      {{#each action.current.cvModifiers as |modifier|}}
-        <div {{#unless modifier.cvMod.ocv }}style="display: none;"{{/unless}}>
-          <label>{{modifier.name}}</label>
-          <label>{{localize "Items.Attack.OcvMod"}}</label>
-          <label>{{modifier.cvMod.ocv}}</label>
-        </div>
-        <div {{#unless modifier.cvMod.dcv }}style="display: none;"{{/unless}}>
-          <label>{{modifier.name}}</label>
-          <label>{{localize "Items.Attack.DcvMod"}}</label>
-          <label>{{modifier.cvMod.dcv}}</label>
-        </div>
-        <div {{#unless (ne 1 modifier.cvMod.dcvMultiplier) }}style="display: none;"{{/unless}}>
-          <label>{{modifier.name}}</label>
-          <label>{{localize "Items.Attack.DcvMod"}}</label>
-          {{!-- TODO: fix this when I have math --}}
-          {{#if
-            (and
-              (gt modifier.cvMod.dcvMultiplier 0)
-              (lt modifier.cvMod.dcvMultiplier 1)
-              0
-            )
-          }}
-            <label>x1/{{math 1 modifier.cvMod.dcvMultiplier}}</label>
-          {{else}}
-            <label>x{{modifier.cvMod.dcvMultiplier}}</label>
-          {{/if}}
-        </div>
-      {{/each}}
-
-
       {{!-- Aim (hit location) form group --}}
       <div class="form-group" {{#unless useHitLoc}}style="display: none;"{{/unless}}>
         <label>Aim</label>
@@ -138,24 +100,6 @@
           {{/each}}
         </select>
       </div>
-      
-      {{#each action.current.ocvModifiers as |ocvModifier|}}
-          <div>
-            <label>{{ocvModifier.name}} OCV:</label>
-            <label>{{ocvModifier.ocvMod}}</label>
-          </div>
-      {{/each}}
-      {{#each action.current.attacks as |attack|}}
-        {{#each attack.ocvModifiers as |ocvModifier|}}
-          <div>
-            <label>{{ocvModifier.name}} OCV:</label>
-            <label>{{ocvModifier.ocvMod}}</label>
-          </div>
-        {{/each}}
-      {{/each}}
-
-
-
       {{!-- Penalty skill levels --}}
       <div class="description" {{#unless PENALTY_SKILL_LEVELS}}style="display: none;"{{/unless}}>
         <b>{{PENALTY_SKILL_LEVELS.name}}
@@ -167,9 +111,52 @@
         <label>Use Penalty Skill Levels</label>
         <input class="item-toggle" name="usePsl" type="checkbox" {{checked usePsl}} data-dtype="Boolean" />
       </div>
+      
+      {{#each action.current.cvModifiers as |modifier|}}
+        <div {{#unless modifier.cvMod.ocv }}style="display: none;"{{/unless}}>
+          <label>{{modifier.name}}</label>
+          <label>{{localize "Items.Attack.OcvMod"}}</label>
+          <label>{{modifier.cvMod.ocv}}</label>
+        </div>
+        <div {{#unless modifier.cvMod.dcv }}style="display: none;"{{/unless}}>
+          <label>{{modifier.name}}</label>
+          <label>{{localize "Items.Attack.DcvMod"}}</label>
+          <label>{{modifier.cvMod.dcv}}</label>
+        </div>
+        <div {{#unless (ne 1 modifier.cvMod.dcvMultiplier) }}style="display: none;"{{/unless}}>
+          <label>{{modifier.name}}</label>
+          <label>{{localize "Items.Attack.DcvMod"}}</label>
+          {{#if (and (gt modifier.cvMod.dcvMultiplier 0)(lt modifier.cvMod.dcvMultiplier 1))}}
+            <label>x1/{{math "/" 1 modifier.cvMod.dcvMultiplier}}</label>
+          {{else}}
+            <label>x{{modifier.cvMod.dcvMultiplier}}</label>
+          {{/if}}
+        </div>
+      {{/each}}
 
       {{!-- attack specific form --}}
       {{#each @root/action.current.attacks as |attack index|}}
+        {{#each attack.cvModifiers as |modifier|}}
+          <div {{#unless modifier.cvMod.ocv }}style="display: none;"{{/unless}}>
+            <label>{{modifier.name}}</label>
+            <label>{{localize "Items.Attack.OcvMod"}}</label>
+            <label>{{modifier.cvMod.ocv}}</label>
+          </div>
+          <div {{#unless modifier.cvMod.dcv }}style="display: none;"{{/unless}}>
+            <label>{{modifier.name}}</label>
+            <label>{{localize "Items.Attack.DcvMod"}}</label>
+            <label>{{modifier.cvMod.dcv}}</label>
+          </div>
+          <div {{#unless (ne 1 modifier.cvMod.dcvMultiplier) }}style="display: none;"{{/unless}}>
+            <label>{{modifier.name}}</label>
+            <label>{{localize "Items.Attack.DcvMod"}}</label>
+            {{#if (and (gt modifier.cvMod.dcvMultiplier 0)(lt modifier.cvMod.dcvMultiplier 1))}}
+              <label>x1/{{math "/" 1 modifier.cvMod.dcvMultiplier}}</label>
+            {{else}}
+              <label>x{{modifier.cvMod.dcvMultiplier}}</label>
+            {{/if}}
+          </div>
+        {{/each}}
         {{!-- autofire form --}}
         {{#if attack.autofire}}
           <div class="attack-options target-container">

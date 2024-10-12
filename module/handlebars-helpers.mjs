@@ -1,5 +1,6 @@
 import { HEROSYS } from "./herosystem6e.mjs";
-
+// Foundry Virtual Tabletop has its own Handlebars Helpers that add to these:
+// https://foundryvtt.com/api/classes/client.HandlebarsHelpers.html
 export function initializeHandlebarsHelpers() {
     Handlebars.registerHelper("indexOf", indexOf);
     Handlebars.registerHelper("abs", abs);
@@ -54,7 +55,9 @@ function math(...theArguments) {
         if (index === 1) {
             initialValue = arg;
         } else if (index > 1) {
-            params.push(arg);
+            if(arg !== 0) {
+                params.push(arg);
+            }
         }
     }
     switch (operator) {
@@ -65,6 +68,10 @@ function math(...theArguments) {
         case "-":
             return params.reduce((accumulator, currentValue) => {
                 return accumulator - currentValue;
+            }, initialValue);
+        case "/":
+            return params.reduce((accumulator, currentValue) => {
+                return accumulator / currentValue;
             }, initialValue);
 
         default:
