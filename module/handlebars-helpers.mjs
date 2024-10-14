@@ -55,7 +55,7 @@ function math(...theArguments) {
         if (index === 1) {
             initialValue = arg;
         } else if (index > 1) {
-            if(arg !== 0) {
+            if (arg !== 0) {
                 params.push(arg);
             }
         }

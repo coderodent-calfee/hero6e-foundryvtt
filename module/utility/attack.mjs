@@ -1,6 +1,107 @@
-import { calculateDistanceBetween } from "./range.mjs";
+import { calculateDistanceBetween, calculateRangePenaltyFromDistanceInMetres } from "../utility/range.mjs";
 
 export class Attack {
+    static getReasonCannotAttack(attack, action) {
+        const item = action.system.item[attack.itemId];
+        const targetsArray = attack.targets;
+        const actingToken = action.system.attackerToken;
+
+        if (targetsArray.length > 1 && !Attack.itemUsesMultipleTargets(item)) {
+            return `${actingToken.name} has ${targetsArray.length} targets selected and ${item.name} supports only one.`;
+        }
+        const autofire = attack.autofire;
+        const isAutofire = !!autofire;
+
+        let charges = null;
+        if (item.findModsByXmlid("CHARGES")) {
+            charges = item.system.charges;
+            if (charges) {
+                if (charges.value === 0) {
+                    return `${item.name} has no charges left.`;
+                }
+                if (charges.value < targetsArray.length) {
+                    return `${actingToken.name} has ${targetsArray.length} targets selected and only ${charges.value} charges left.`;
+                }
+                if (isAutofire) {
+                    if (charges.value < autofire.totalShotsFired) {
+                        return `${actingToken.name} is going to use ${autofire.totalShotsFired} charges and only ${charges.value} charges left.`;
+                    }
+                }
+            }
+        }
+        if (isAutofire) {
+            if (autofire.autoFireShots < autofire.totalShotsFired) {
+                return `${actingToken.name} is going to fire ${autofire.totalShotsFired} shots and can only fire ${autofire.autoFireShots} shots.`;
+            }
+        }
+
+        const selfOnly = !!item.findModsByXmlid("SELFONLY");
+        const onlySelf = !!item.findModsByXmlid("ONLYSELF");
+        const usableOnOthers = !!item.findModsByXmlid("UOO");
+        // supposedly item.system.range  has factored all of this in...
+        const rangeSelf = item.system.range === "Self";
+
+        if (rangeSelf || selfOnly || onlySelf) {
+            if (usableOnOthers) {
+                console.log(`${item.name} is a self-only ability that is usable on others!!??`);
+            } else {
+                console.log(`${item.name} is a self-only ability`);
+            }
+            // TODO: Should not be able to use this on anyone else. Should add a check.
+            if (targetsArray.length > 1) {
+                return `There are ${targetsArray.length} targets selected and ${item.name} is a self-only ability.`;
+            }
+            if (targetsArray.length > 0) {
+                // check if the target is me
+                if (item.actor._id !== targetsArray[0].actor._id) {
+                    return `${targetsArray[0].name} is targeted and ${item.name} is a self-only ability.`;
+                }
+            }
+        }
+
+        const noRange = item.system.range === "No Range";
+        if (noRange) {
+            for (let i = 0; i < attack.targets.length; i++) {
+                const targetInfo = attack.targets[i];
+                const targetId = targetInfo.targetId;
+                const range = targetInfo.range;
+                // what are the units of distance? 2M is standard reach
+                // if the actor has a greater reach then count that...
+                if (range > 2) {
+                    // TODO: get reach (STRETCHING/GROWTH/SHRINK)
+                    const target = action.system.token[targetId];
+                    return `${item.name} is a no range ability, and ${target.name} is at a distance of ${range}`;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    static itemUsesMultipleTargets(item) {
+        // is there a system to indicate this?
+        const autofire = !!item.findModsByXmlid("AUTOFIRE");
+        const multipleAttack = item.system.XMLID === "MULTIPLEATTACK";
+        const moveby = item.system.XMLID === "MOVEBY";
+        return autofire || multipleAttack || moveby;
+    }
+
+    static getReasonCannotAction(action) {
+        console.log("Action: ", action);
+        let reason = action.system.actor.getTheReasonsCannotAct();
+        if (reason.length) {
+            return `${this.name} is ${reason.join(", ")} and cannot act.`;
+        }
+        const attacks = action.current.attacks;
+        for (let i = 0; i < attacks.length; i++) {
+            const attacksReason = Attack.getReasonCannotAttack(attacks[i], action);
+            if (attacksReason) {
+                return attacksReason;
+            }
+        }
+        return null;
+    }
+
     static async makeActionActiveEffects(action) {
         const cvModifiers = action.current.cvModifiers;
         // const item = action.system.item[action.current.itemId];
@@ -187,22 +288,22 @@ export class Attack {
     }
 
     static makeOcvModifier(ocvMod, XMLID, name, id) {
-        return Attack.makeCvModifier({ocv:ocvMod}, XMLID, name, id);
+        return Attack.makeCvModifier({ ocv: ocvMod }, XMLID, name, id);
     }
-    
+
     // cvMod is a structure: { ocv, dcv, dc, dcvMultiplier, ocvMultiplier }
     static makeCvModifier(cvModParam, XMLID, name, id) {
-        const cvMod = { dcvMultiplier: 1};
-        if(cvModParam.ocv){
+        const cvMod = { dcvMultiplier: 1 };
+        if (cvModParam.ocv) {
             cvMod.ocv = cvModParam.ocv < 0 ? Math.ceil(cvModParam.ocv) : Math.floor(cvModParam.ocv);
         }
-        if(cvModParam.dcv){
+        if (cvModParam.dcv) {
             cvMod.dcv = cvModParam.dcv < 0 ? Math.ceil(cvModParam.dcv) : Math.floor(cvModParam.dcv);
         }
-        if(cvModParam.dcvMultiplier || cvModParam.dcvMultiplier === 0){
+        if (cvModParam.dcvMultiplier || cvModParam.dcvMultiplier === 0) {
             cvMod.dcvMultiplier = cvModParam.dcvMultiplier;
         }
-        
+
         return { cvMod, XMLID, name, id };
     }
 
@@ -213,7 +314,6 @@ export class Attack {
         let strike = item.actor.items.find((item) => "STRIKE" === item.system.XMLID);
         return strike?.id;
     }
-
 
     static addMultipleAttack(data) {
         if (!data.action?.maneuver?.attackKeys?.length) {
@@ -275,8 +375,8 @@ export class Attack {
 
     static getRangeModifier(item, range) {
         const actor = item.actor;
-
-        if (item.system.range === "self") {
+        //calculateRangePenaltyFromDistanceInMetres(distanceInMetres, actor)
+        if (item.system.range === "Self") {
             // TODO: Should not be able to use this on anyone else. Should add a check.
             console.log("item.system.range === self && range:", range);
             return 0;
@@ -291,14 +391,12 @@ export class Attack {
         // There are no range penalties if this is a line of sight power or it has been bought with
         // no range modifiers.
         if (!(item.system.range === "los" || noRangeModifiers || normalRange)) {
-            const factor = actor.system.is5e ? 4 : 8;
-
-            let rangePenalty = -Math.ceil(Math.log2(range / factor)) * 2;
+            let rangePenalty = -calculateRangePenaltyFromDistanceInMetres(range, actor);
             rangePenalty = rangePenalty > 0 ? 0 : rangePenalty;
 
             // Brace (+2 OCV only to offset the Range Modifier)
             const braceManeuver = item.actor.items.find(
-                (item) => item.type == "maneuver" && item.name === "Brace" && item.system.active,
+                (item) => item.type === "maneuver" && item.name === "Brace" && item.system.active,
             );
             if (braceManeuver) {
                 //TODO: ???
@@ -316,7 +414,8 @@ export class Attack {
             results: [], // todo: for attacks that roll one effect and apply to multiple targets do something different here
         };
         target.range = calculateDistanceBetween(system.attackerToken, targetedToken);
-        target.cvModifiers.push(Attack.makeOcvModifier(Attack.getRangeModifier(item, target.range), "RANGE", "Range"));
+        target.rangeOcvMod = Attack.getRangeModifier(item, target.range);
+        target.cvModifiers.push(Attack.makeOcvModifier(target.rangeOcvMod, "RANGE", "Range"));
         return target;
     }
 
@@ -383,7 +482,7 @@ export class Attack {
             } else {
                 const prevTarget = system.token[targets[i - 1].targetId];
                 const targetToken = system.token[targetId];
-                const skippedMeters = canvas.grid.measureDistance(prevTarget, targetToken, { gridSpaces: true });
+                const skippedMeters = calculateDistanceBetween(prevTarget, targetToken);
                 console.log(`skip ${skippedMeters} meters between ${prevTarget.name} and ${targetToken.name}`);
                 target.skippedMeters = skippedMeters;
                 let skippedShots = Math.floor(skippedMeters / 2 - 1);
@@ -436,19 +535,31 @@ export class Attack {
         // perhaps roll these onto the target? easier to assemble in the display?
         if (!singleTarget) {
             if (autofireSkills.ACCURATE) {
-                autofire.cvModifiers.push(Attack.makeOcvModifier(-1, autofireSkills.ACCURATE.XMLID, autofireSkills.ACCURATE.OPTION_ALIAS));
+                autofire.cvModifiers.push(
+                    Attack.makeOcvModifier(-1, autofireSkills.ACCURATE.XMLID, autofireSkills.ACCURATE.OPTION_ALIAS),
+                );
             } else {
-                autofire.cvModifiers.push(Attack.makeOcvModifier(autofire.totalSkippedMeters / -2, autofireMod.XMLID, autofireMod.ALIAS));
+                autofire.cvModifiers.push(
+                    Attack.makeOcvModifier(
+                        autofire.totalSkippedMeters / -2,
+                        autofireMod.XMLID,
+                        `${autofireMod.ALIAS} over ${autofire.totalSkippedMeters} meters `,
+                    ),
+                );
             }
             if (autofireSkills.CONCENTRATED) {
-                autofire.cvModifiers.push(Attack.makeOcvModifier(
+                autofire.cvModifiers.push(
+                    Attack.makeOcvModifier(
                         -1,
                         autofireSkills.CONCENTRATED.XMLID,
                         autofireSkills.CONCENTRATED.OPTION_ALIAS,
-                    ));
+                    ),
+                );
             }
             if (autofireSkills.SKIPOVER) {
-                autofire.cvModifiers.push(Attack.makeOcvModifier(-1, autofireSkills.SKIPOVER.XMLID, autofireSkills.SKIPOVER.OPTION_ALIAS));
+                autofire.cvModifiers.push(
+                    Attack.makeOcvModifier(-1, autofireSkills.SKIPOVER.XMLID, autofireSkills.SKIPOVER.OPTION_ALIAS),
+                );
             }
         }
         return autofire;
@@ -459,6 +570,7 @@ export class Attack {
         for (let i = 0; i < targetedTokens.length; i++) {
             const target = Attack.getTargetInfo(item, targetedTokens[i], options, system);
             targets.push(target);
+            system.item[item.id] = item;
         }
         const attack = {
             itemId: item?.id,
@@ -471,7 +583,9 @@ export class Attack {
             attack.autofire = autofire;
             attack.cvModifiers = attack.cvModifiers.concat(autofire.cvModifiers);
         }
-
+        if (item) {
+            system.item[item.id] = item;
+        }
         return attack;
     }
 
@@ -596,8 +710,8 @@ export class Attack {
             system.currentItem = maneuverItem;
             system.currentTargets = [maneuverTarget];
 
-            const multipleAttackItem = system.item[maneuver.itemId];
-            const xmlid = multipleAttackItem.system.XMLID;
+            // const multipleAttackItem = system.item[maneuver.itemId];
+            // const xmlid = multipleAttackItem.system.XMLID;
             // keep range mods to ourselves until we can agree on a single solution
             // current.attacks.forEach((attack)=>{ attack.targets.forEach((target)=>{
             //     current.ocvModifiers = [].concat(current.ocvModifiers, target.ocvModifiers );

@@ -172,7 +172,7 @@
               <div class="target-info-row">
                 <div class="ellipsis-text target-name" target_id="{{target.targetId}}">{{lookup (lookup @root/action.system.token target.targetId) "name" }}</div>
                 <div>{{target.range}}m</div>
-                <div>{{target.totalOcvMod}}</div>
+                <div>{{target.rangeOcvMod}}</div>
                 <div>{{target.skippedShots}}</div>
                 {{!-- we need input if this is autofire on one target, or if they have Concentrated Sprayfire --}}
                 {{#if

@@ -396,27 +396,9 @@ export class HeroSystem6eActor extends Actor {
     // When stunned, knockedout, etc you cannot act
     canAct(uiNotice, event) {
         let result = true;
-        let badStatus = [];
+        let badStatus = this.getTheReasonsCannotAct();
 
-        if (this.statuses.has("knockedOut")) {
-            if (uiNotice) badStatus.push("KNOCKED OUT");
-            result = false;
-        }
-
-        if (this.statuses.has("stunned")) {
-            badStatus.push("STUNNED");
-            result = false;
-        }
-
-        if (this.statuses.has("aborted")) {
-            badStatus.push("ABORTED");
-            result = false;
-        }
-
-        if (parseInt(this.system.characteristics.spd?.value || 0) < 1) {
-            if (uiNotice) badStatus.push("SPD1");
-            result = false;
-        }
+        result = badStatus.length === 0;
 
         if (!result && event?.shiftKey) {
             const speaker = ChatMessage.getSpeaker({
@@ -445,6 +427,27 @@ export class HeroSystem6eActor extends Actor {
         }
 
         return result;
+    }
+
+    getTheReasonsCannotAct() {
+        let badStatus = [];
+
+        if (this.statuses.has("knockedOut")) {
+            badStatus.push("KNOCKED OUT");
+        }
+
+        if (this.statuses.has("stunned")) {
+            badStatus.push("STUNNED");
+        }
+
+        if (this.statuses.has("aborted")) {
+            badStatus.push("ABORTED");
+        }
+
+        if (parseInt(this.system.characteristics.spd?.value || 0) < 1) {
+            badStatus.push("SPD1");
+        }
+        return badStatus;
     }
 
     /**

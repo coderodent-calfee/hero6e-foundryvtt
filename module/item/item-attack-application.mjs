@@ -80,7 +80,6 @@ export class ItemAttackFormApplication extends FormApplication {
         const data = this.data;
         const item = data.item;
 
-        data.targets = game.user.targets;
         data.targets = Array.from(game.user.targets);
 
         if (data.targets.length === 0 && item.system.XMLID === "MINDSCAN" && game.user.isGM) {
@@ -211,6 +210,13 @@ export class ItemAttackFormApplication extends FormApplication {
             data.targets,
             data.formData, // use formdata to include player options from the form
         );
+        const oldReason = data.cannotAttack;
+        data.cannotAttack = Attack.getReasonCannotAction(data.action);
+        if (data.cannotAttack && data.cannotAttack !== oldReason) {
+            console.log("cannot make attack because ", data.cannotAttack);
+            ui.notifications.warn(data.cannotAttack); // we will also add the reason to not attack into the option box
+        }
+
         // the title seems to be fixed when the form is initialized,
         // and doesn't change afterwards even if we come through here again
         // todo: figure out how to adjust the title when we want it to
