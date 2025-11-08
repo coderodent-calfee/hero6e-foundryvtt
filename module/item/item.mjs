@@ -5849,14 +5849,9 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
             case "CHAR":
                 {
-                    OPTION_ALIAS = OPTION_ALIAS?.split(",")[0].replace(/roll/i, "").trim();
-                    let char = item.actor.system.characteristics[OPTION_ALIAS.toLowerCase()];
-                    if (!char && rar.COMMENTS) {
-                        char = item.actor.system.characteristics[rar.COMMENTS.toLowerCase()];
-                        if (char) {
-                            OPTION_ALIAS = rar.COMMENTS;
-                        }
-                    }
+                    const charKey = getRequiredCharacteristicKey();
+
+                    let char = item.actor.system.characteristics[charKey];
                     if (char) {
                         item.actor.updateRollable(OPTION_ALIAS.toLowerCase());
                         value = parseInt(item.actor.system.characteristics[OPTION_ALIAS.toLowerCase()].roll);
