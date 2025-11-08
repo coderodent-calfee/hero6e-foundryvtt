@@ -5681,7 +5681,7 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
     // Requires A Roll (generic) default to 11
     let value = parseInt(rar.OPTIONID);
-    {
+    if (isNaN(value)) {
         switch (rar.OPTIONID) {
             case "SKILL":
             case "SKILL1PER5":
