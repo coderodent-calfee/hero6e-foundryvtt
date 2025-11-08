@@ -5882,7 +5882,7 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
     const total = activationRoller.getSuccessTotal();
     const margin = successValue - total;
 
-    const flavor = `${item.name.toUpperCase()} (${OPTION_ALIAS}) activation ${
+    const flavor = `${item.name} (${OPTION_ALIAS}) activation ${
         succeeded ? "succeeded" : "failed"
     } by ${autoSuccess === undefined ? `${Math.abs(margin)}` : `rolling ${total}`}`;
     let cardHtml = await activationRoller.render(flavor);
