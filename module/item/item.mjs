@@ -5715,6 +5715,23 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
             return false;
         };        
 
+        const matchBackgroundSkillRoll = (o) => {
+            if (rar.OPTIONID !== o.system.ALIAS && !(rar.OPTIONID === "SS" && o.system.XMLID === "SCIENCE_SKILL")) {
+                return false;
+            }
+            const inputUpper = o.system.INPUT?.toUpperCase() ?? "";
+            if (
+                RAR_OPTION_ALIAS_SUBSTRING === inputUpper ||
+                RAR_COMMENTS === inputUpper ||
+                RAR_ALIAS.includes(inputUpper)
+            ) {
+                OPTION_ALIAS = o.system.INPUT;
+                return true;
+            }
+            return matchRequiredSkillRoll(o);
+        };
+
+
         switch (rar.OPTIONID) {
             case "SKILL":
             case "SKILL1PER5":
