@@ -5681,7 +5681,14 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
     // Requires A Roll (generic) default to 11
     let value = parseInt(rar.OPTIONID);
+    // if the RaR is an Activation roll, then we have the value we need
     if (isNaN(value)) {
+
+        const RAR_OPTION_ALIAS_SUBSTRING =
+            RAR_OPTION_ALIAS?.toUpperCase().split(",")[0].replace(/ROLL/i, "").trim() ?? "";
+        const RAR_ALIAS = rar.ALIAS?.toUpperCase() ?? ""; // From the "Display" field. ex: "Requires A Magic Roll"
+        const RAR_COMMENTS = rar.COMMENTS?.toUpperCase() ?? ""; // From the "Comments" field. ex: might just say "Magic"        
+        
         switch (rar.OPTIONID) {
             case "SKILL":
             case "SKILL1PER5":
