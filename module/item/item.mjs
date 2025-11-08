@@ -5810,15 +5810,17 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
                     if (skill) {
                         value = parseInt(skill.system.roll);
+                        if (isNaN(value)) {
+                            value = 11;
+                        }
                         if (rar.OPTIONID === "SKILL1PER5")
                             value = Math.max(3, value - Math.floor(parseInt(item.activePoints) / 5));
                         if (rar.OPTIONID === "SKILL1PER20")
                             value = Math.max(3, value - Math.floor(parseInt(item.activePoints) / 20));
-
                         OPTION_ALIAS += ` ${value}-`;
                     } else {
                         ui.notifications.warn(
-                            `${item.actor.name} has a power ${item.name}. Expecting 'SKILL roll', where SKILL is the name of an owned skill.`,
+                            `${item.actor.name} has a power ${item.name}. Expecting 'SKILL roll', where SKILL is the name of an owned skill.<br>Put the name of the skill into the Options or Comments of the Requires A Roll modifier for the best results.`,
                         );
 
                         if (!overrideCanAct) {
