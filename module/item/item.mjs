@@ -5731,6 +5731,36 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
             return matchRequiredSkillRoll(o);
         };
 
+        const characteristicKeys = Object.keys(item.actor.system.characteristics).map((k) => k.toLowerCase());
+        const rarDisplayMaybeHasCharKey = RAR_ALIAS.toLowerCase();
+        const rarOptionMaybeIsCharKey = RAR_OPTION_ALIAS_SUBSTRING.toLowerCase();
+
+        const getRequiredCharacteristicKey = () => {
+            const maybeCharacteristicKey = RAR_COMMENTS.toLowerCase(); // pre or presence
+            if (characteristicKeys.includes(maybeCharacteristicKey)) {
+                // finds pre, not presence
+                return maybeCharacteristicKey;
+            }
+            const matchedKeyInComment = characteristicKeys.find((key) => maybeCharacteristicKey.includes(key));
+            if (matchedKeyInComment) {
+                return matchedKeyInComment;
+            }
+            const matchedKeyInName = characteristicKeys.find((key) => rarDisplayMaybeHasCharKey.includes(key));
+            if (matchedKeyInName) {
+                return matchedKeyInName;
+            }
+            const matchedKeyInOption = characteristicKeys.find((key) => rarOptionMaybeIsCharKey.includes(key));
+            return matchedKeyInOption ?? "";
+        };
+
+        const filterSkillRollItems = (o) => {
+            return (
+                o.baseInfo?.type?.includes("skill") && // is a skill
+                !o.baseInfo?.type?.includes("enhancer") && // is not an enhancer (scholar, scientist, etc.)
+                o.system.XMLID !== "SKILL_LEVELS" && // is not a bonus to skills
+                o.system.XMLID !== "COMBAT_LEVELS"  // is not a bonus to combat
+            )
+        };
 
         switch (rar.OPTIONID) {
             case "SKILL":
