@@ -5688,6 +5688,7 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
             RAR_OPTION_ALIAS?.toUpperCase().split(",")[0].replace(/ROLL/i, "").trim() ?? "";
         const RAR_ALIAS = rar.ALIAS?.toUpperCase() ?? ""; // From the "Display" field. ex: "Requires A Magic Roll"
         const RAR_COMMENTS = rar.COMMENTS?.toUpperCase() ?? ""; // From the "Comments" field. ex: might just say "Magic"        
+        const RAR_ROLLALIAS = rar.ROLLALIAS?.toUpperCase() ?? "";
 
         const matchRequiredSkillRoll = (o) => {
             const aliasUpper = o.system.ALIAS?.toUpperCase() ?? "";
@@ -5696,18 +5697,26 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                 OPTION_ALIAS = RAR_OPTION_ALIAS_SUBSTRING;
                 return true;
             }
-            if (
-                RAR_OPTION_ALIAS_SUBSTRING === aliasUpper ||
+            if (RAR_ROLLALIAS && 
+                (o.system.XMLID.startsWith(RAR_ROLLALIAS) ||
+                RAR_ROLLALIAS === nameUpper ||
+                RAR_ROLLALIAS === aliasUpper)
+            ) {
+                OPTION_ALIAS =  rar.ROLLALIAS;
+                return true;
+            }
+            if (aliasUpper &&
+                (RAR_OPTION_ALIAS_SUBSTRING === aliasUpper ||
                 RAR_COMMENTS === aliasUpper ||
-                RAR_ALIAS.includes(aliasUpper)
+                RAR_ALIAS.includes(aliasUpper))
             ) {
                 OPTION_ALIAS = o.system.ALIAS;
                 return true;
             }
-            if (
-                RAR_OPTION_ALIAS_SUBSTRING === nameUpper ||
+            if ( nameUpper &&
+(                RAR_OPTION_ALIAS_SUBSTRING === nameUpper ||
                 RAR_COMMENTS === nameUpper ||
-                RAR_ALIAS.includes(nameUpper)
+                RAR_ALIAS.includes(nameUpper))
             ) {
                 OPTION_ALIAS = o.name;
                 return true;
@@ -5720,10 +5729,11 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                 return false;
             }
             const inputUpper = o.system.INPUT?.toUpperCase() ?? "";
-            if (
-                RAR_OPTION_ALIAS_SUBSTRING === inputUpper ||
+            if (inputUpper &&
+                (RAR_OPTION_ALIAS_SUBSTRING === inputUpper ||
                 RAR_COMMENTS === inputUpper ||
-                RAR_ALIAS.includes(inputUpper)
+                RAR_ALIAS.includes(inputUpper) ||
+                RAR_ROLLALIAS === inputUpper)
             ) {
                 OPTION_ALIAS = o.system.INPUT;
                 return true;
@@ -5767,14 +5777,20 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
             case "SKILL1PER5":
             case "SKILL1PER20":
             case "BASICRSR":
+            case "PER":
+            case "KS":
+            case "PS":
+            case "SS":
                 {
                     OPTION_ALIAS = OPTION_ALIAS?.split(",")[0].replace(/roll/i, "").trim();
-                    let skill = item.actor.items.find(
-                        (o) =>
-                            o.baseInfo?.type.includes("skill") &&
-                            (o.system.XMLID === OPTION_ALIAS.toUpperCase() ||
-                                o.name.toUpperCase() === OPTION_ALIAS.toUpperCase()),
-                    );
+                    let skill = undefined;
+                    if (["SS", "KS", "PS"].includes(rar.OPTIONID)) {
+                        skill = item.actor.items.find((o) => filterSkillRollItems(o) && matchBackgroundSkillRoll(o));
+                    } else if (rar.OPTIONID === "PER") {
+                        skill = item.actor.items.find((o) => o.system.XMLID === "PERCEPTION");
+                    } else {
+                        skill = item.actor.items.find((o) => filterSkillRollItems(o) && matchRequiredSkillRoll(o));
+                    }
 
                     // ROLLALIAS has the skill
                     if (!skill && rar.ROLLALIAS) {
