@@ -5782,7 +5782,7 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
             case "PS":
             case "SS":
                 {
-                    OPTION_ALIAS = OPTION_ALIAS?.split(",")[0].replace(/roll/i, "").trim();
+                    OPTION_ALIAS = RAR_OPTION_ALIAS_SUBSTRING;
                     let skill = undefined;
                     if (["SS", "KS", "PS"].includes(rar.OPTIONID)) {
                         skill = item.actor.items.find((o) => filterSkillRollItems(o) && matchBackgroundSkillRoll(o));
