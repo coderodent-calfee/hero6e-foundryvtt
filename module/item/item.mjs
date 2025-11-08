@@ -5688,7 +5688,37 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
             RAR_OPTION_ALIAS?.toUpperCase().split(",")[0].replace(/ROLL/i, "").trim() ?? "";
         const RAR_ALIAS = rar.ALIAS?.toUpperCase() ?? ""; // From the "Display" field. ex: "Requires A Magic Roll"
         const RAR_COMMENTS = rar.COMMENTS?.toUpperCase() ?? ""; // From the "Comments" field. ex: might just say "Magic"        
-        
+
+        const matchRequiredSkillRoll = (o) => {
+            const aliasUpper = o.system.ALIAS?.toUpperCase() ?? "";
+            const nameUpper = o.name?.toUpperCase() ?? "";
+
+            if (o.system.XMLID === RAR_OPTION_ALIAS_SUBSTRING) {
+                OPTION_ALIAS = RAR_OPTION_ALIAS_SUBSTRING;
+                return true;
+            }
+
+            if (
+                RAR_OPTION_ALIAS_SUBSTRING === aliasUpper ||
+                RAR_COMMENTS === aliasUpper ||
+                RAR_ALIAS.includes(aliasUpper)
+            ) {
+                OPTION_ALIAS = o.system.ALIAS;
+                return true;
+            }
+
+            if (
+                RAR_OPTION_ALIAS_SUBSTRING === nameUpper ||
+                RAR_COMMENTS === nameUpper ||
+                RAR_ALIAS.includes(nameUpper)
+            ) {
+                OPTION_ALIAS = o.name;
+                return true;
+            }
+
+            return false;
+        };        
+
         switch (rar.OPTIONID) {
             case "SKILL":
             case "SKILL1PER5":
