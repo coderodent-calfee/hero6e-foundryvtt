@@ -5683,11 +5683,10 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
     let value = parseInt(rar.OPTIONID);
     // if the RaR is an Activation roll, then we have the value we need
     if (isNaN(value)) {
-
         const RAR_OPTION_ALIAS_SUBSTRING =
             RAR_OPTION_ALIAS?.toUpperCase().split(",")[0].replace(/ROLL/i, "").trim() ?? "";
         const RAR_ALIAS = rar.ALIAS?.toUpperCase() ?? ""; // From the "Display" field. ex: "Requires A Magic Roll"
-        const RAR_COMMENTS = rar.COMMENTS?.toUpperCase() ?? ""; // From the "Comments" field. ex: might just say "Magic"        
+        const RAR_COMMENTS = rar.COMMENTS?.toUpperCase() ?? ""; // From the "Comments" field. ex: might just say "Magic"
         const RAR_ROLLALIAS = rar.ROLLALIAS?.toUpperCase() ?? "";
 
         const matchRequiredSkillRoll = (o) => {
@@ -5697,43 +5696,47 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                 OPTION_ALIAS = RAR_OPTION_ALIAS_SUBSTRING;
                 return true;
             }
-            if (RAR_ROLLALIAS && 
+            if (
+                RAR_ROLLALIAS &&
                 (o.system.XMLID.startsWith(RAR_ROLLALIAS) ||
-                RAR_ROLLALIAS === nameUpper ||
-                RAR_ROLLALIAS === aliasUpper)
+                    RAR_ROLLALIAS === nameUpper ||
+                    RAR_ROLLALIAS === aliasUpper)
             ) {
-                OPTION_ALIAS =  rar.ROLLALIAS;
+                OPTION_ALIAS = rar.ROLLALIAS;
                 return true;
             }
-            if (aliasUpper &&
+            if (
+                aliasUpper &&
                 (RAR_OPTION_ALIAS_SUBSTRING === aliasUpper ||
-                RAR_COMMENTS === aliasUpper ||
-                RAR_ALIAS.includes(aliasUpper))
+                    RAR_COMMENTS === aliasUpper ||
+                    RAR_ALIAS.includes(aliasUpper))
             ) {
                 OPTION_ALIAS = o.system.ALIAS;
                 return true;
             }
-            if ( nameUpper &&
-(                RAR_OPTION_ALIAS_SUBSTRING === nameUpper ||
-                RAR_COMMENTS === nameUpper ||
-                RAR_ALIAS.includes(nameUpper))
+            if (
+                nameUpper &&
+                (RAR_OPTION_ALIAS_SUBSTRING === nameUpper ||
+                    RAR_COMMENTS === nameUpper ||
+                    RAR_ALIAS.includes(nameUpper))
             ) {
                 OPTION_ALIAS = o.name;
                 return true;
             }
             return false;
-        };        
+        };
 
         const matchBackgroundSkillRoll = (o) => {
             if (rar.OPTIONID !== o.system.ALIAS && !(rar.OPTIONID === "SS" && o.system.XMLID === "SCIENCE_SKILL")) {
                 return false;
             }
             const inputUpper = o.system.INPUT?.toUpperCase() ?? "";
-            if (inputUpper &&
+            if (
+                inputUpper &&
                 (RAR_OPTION_ALIAS_SUBSTRING === inputUpper ||
-                RAR_COMMENTS === inputUpper ||
-                RAR_ALIAS.includes(inputUpper) ||
-                RAR_ROLLALIAS === inputUpper)
+                    RAR_COMMENTS === inputUpper ||
+                    RAR_ALIAS.includes(inputUpper) ||
+                    RAR_ROLLALIAS === inputUpper)
             ) {
                 OPTION_ALIAS = o.system.INPUT;
                 return true;
@@ -5768,8 +5771,8 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                 o.baseInfo?.type?.includes("skill") && // is a skill
                 !o.baseInfo?.type?.includes("enhancer") && // is not an enhancer (scholar, scientist, etc.)
                 o.system.XMLID !== "SKILL_LEVELS" && // is not a bonus to skills
-                o.system.XMLID !== "COMBAT_LEVELS"  // is not a bonus to combat
-            )
+                o.system.XMLID !== "COMBAT_LEVELS" // is not a bonus to combat
+            );
         };
 
         switch (rar.OPTIONID) {
@@ -5791,10 +5794,12 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                     } else {
                         skill = item.actor.items.find((o) => filterSkillRollItems(o) && matchRequiredSkillRoll(o));
                     }
-                    if (!skill) { // still no skill found; did they put in a characteristic instead?
+                    if (!skill) {
+                        // still no skill found; did they put in a characteristic instead?
                         const charKey = getRequiredCharacteristicKey();
                         let char = item.actor.system.characteristics[rar.COMMENTS.toLowerCase()];
                         if (char) {
+                            // Should we change the RaR OPTIONID?
                             OPTION_ALIAS = charKey.toUpperCase();
                             ui.notifications.warn(
                                 `${item.actor.name} has a power ${item.name}, which is incorrectly built.  Skill Roll for ${rar.COMMENTS} should be a Characteristic Roll.`,
@@ -5809,6 +5814,7 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                     }
 
                     if (skill) {
+                        // Should we save this in the ROLLALIAS?
                         value = parseInt(skill.system.roll);
                         if (isNaN(value)) {
                             value = 11;
@@ -5853,6 +5859,7 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
                     let char = item.actor.system.characteristics[charKey];
                     if (char) {
+                        // Should we update the RaR if the stat was not in COMMENT
                         item.actor.updateRollable(RAR_OPTION_ALIAS);
                         value = parseInt(char.roll);
                         OPTION_ALIAS += ` ${value}-`;
@@ -5866,7 +5873,9 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
             default:
                 if (!value) {
-                    ui.notifications.warn(`${item.actor.name} has a power ${item.name}. ${OPTION_ALIAS} is not supported.`);
+                    ui.notifications.warn(
+                        `${item.actor.name} has a power ${item.name}. ${OPTION_ALIAS} is not supported.`,
+                    );
 
                     // Try to continue
                     value = 11;
