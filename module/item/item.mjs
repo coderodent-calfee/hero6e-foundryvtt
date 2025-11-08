@@ -5791,7 +5791,19 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                     } else {
                         skill = item.actor.items.find((o) => filterSkillRollItems(o) && matchRequiredSkillRoll(o));
                     }
+                    if (!skill) { // still no skill found; did they put in a characteristic instead?
+                        const charKey = getRequiredCharacteristicKey();
+                        let char = item.actor.system.characteristics[rar.COMMENTS.toLowerCase()];
+                        if (char) {
+                            OPTION_ALIAS = charKey.toUpperCase();
+                            ui.notifications.warn(
+                                `${item.actor.name} has a power ${item.name}, which is incorrectly built.  Skill Roll for ${rar.COMMENTS} should be a Characteristic Roll.`,
+                            );
 
+                            // Lets try anyway
+                            value = char?.roll;
+                        }
+                    }
 
                     if (skill) {
                         value = parseInt(skill.system.roll);
