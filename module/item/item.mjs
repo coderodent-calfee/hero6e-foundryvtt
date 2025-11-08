@@ -5692,12 +5692,10 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
         const matchRequiredSkillRoll = (o) => {
             const aliasUpper = o.system.ALIAS?.toUpperCase() ?? "";
             const nameUpper = o.name?.toUpperCase() ?? "";
-
             if (o.system.XMLID === RAR_OPTION_ALIAS_SUBSTRING) {
                 OPTION_ALIAS = RAR_OPTION_ALIAS_SUBSTRING;
                 return true;
             }
-
             if (
                 RAR_OPTION_ALIAS_SUBSTRING === aliasUpper ||
                 RAR_COMMENTS === aliasUpper ||
@@ -5706,7 +5704,6 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                 OPTION_ALIAS = o.system.ALIAS;
                 return true;
             }
-
             if (
                 RAR_OPTION_ALIAS_SUBSTRING === nameUpper ||
                 RAR_COMMENTS === nameUpper ||
@@ -5715,7 +5712,6 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                 OPTION_ALIAS = o.name;
                 return true;
             }
-
             return false;
         };        
 
