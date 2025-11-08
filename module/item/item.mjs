@@ -5792,45 +5792,6 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                         skill = item.actor.items.find((o) => filterSkillRollItems(o) && matchRequiredSkillRoll(o));
                     }
 
-                    // ROLLALIAS has the skill
-                    if (!skill && rar.ROLLALIAS) {
-                        skill = item.actor.items.find(
-                            (o) =>
-                                o.baseInfo?.type.includes("skill") &&
-                                (o.system.XMLID.replace("_SKILL", "") === rar.ROLLALIAS.toUpperCase() ||
-                                    o.name.toUpperCase() === rar.ROLLALIAS.toUpperCase() ||
-                                    o.system.INPUT?.toUpperCase() === rar.ROLLALIAS.toUpperCase()),
-                        );
-                        if (skill) {
-                            OPTION_ALIAS = rar.ROLLALIAS;
-                        }
-                    }
-
-                    // COMMENTS has the skill
-                    if (!skill && rar.COMMENTS) {
-                        skill = item.actor.items.find(
-                            (o) =>
-                                o.baseInfo?.type.includes("skill") &&
-                                (o.system.XMLID.replace("_SKILL", "") === rar.COMMENTS.toUpperCase() ||
-                                    o.name.toUpperCase() === rar.COMMENTS.toUpperCase() ||
-                                    o.system.INPUT?.toUpperCase() === rar.COMMENTS.toUpperCase()),
-                        );
-                        if (skill) {
-                            OPTION_ALIAS = rar.COMMENTS;
-                        }
-                    }
-
-                    if (!skill && rar.COMMENTS) {
-                        let char = item.actor.system.characteristics[rar.COMMENTS.toLowerCase()];
-                        if (char) {
-                            ui.notifications.warn(
-                                `${item.actor.name} has a power ${item.name}, which is incorrectly built.  Skill Roll for ${rar.COMMENTS} should be a Characteristic Roll.`,
-                            );
-
-                            // Lets try anyway
-                            value = char?.roll;
-                        }
-                    }
 
                     if (skill) {
                         value = parseInt(skill.system.roll);
