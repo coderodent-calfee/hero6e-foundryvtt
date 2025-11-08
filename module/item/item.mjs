@@ -5853,12 +5853,12 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
 
                     let char = item.actor.system.characteristics[charKey];
                     if (char) {
-                        item.actor.updateRollable(OPTION_ALIAS.toLowerCase());
-                        value = parseInt(item.actor.system.characteristics[OPTION_ALIAS.toLowerCase()].roll);
+                        item.actor.updateRollable(RAR_OPTION_ALIAS);
+                        value = parseInt(char.roll);
                         OPTION_ALIAS += ` ${value}-`;
                     } else {
                         ui.notifications.warn(
-                            `${item.actor.name} has a power ${item.name}. Expecting 'CHAR roll', where CHAR is the name of a characteristic.`,
+                            `${item.actor.name} has a power ${item.name}. Expecting 'CHAR roll', where CHAR is the name of a characteristic.<br>Put the name of the characteristic into the Options or Comments of the Requires A Roll modifier for the best results.`,
                         );
                     }
                 }
