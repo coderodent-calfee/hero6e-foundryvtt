@@ -5676,7 +5676,8 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
         return true;
     }
 
-    let OPTION_ALIAS = rar.OPTION_ALIAS;
+    const RAR_OPTION_ALIAS = rar.OPTION_ALIAS;
+    let OPTION_ALIAS = RAR_OPTION_ALIAS;
 
     // Requires A Roll (generic) default to 11
     let value = parseInt(rar.OPTIONID);
