@@ -5800,8 +5800,11 @@ export async function rollRequiresASkillRollCheck(item, options = {}) {
                                 `${item.actor.name} has a power ${item.name}, which is incorrectly built.  Skill Roll for ${rar.COMMENTS} should be a Characteristic Roll.`,
                             );
 
-                            // Lets try anyway
-                            value = char?.roll;
+                            value = parseInt(char.roll);
+                            if (isNaN(value)) {
+                                value = 11;
+                            }
+                            OPTION_ALIAS += ` ${value}-`;
                         }
                     }
 
